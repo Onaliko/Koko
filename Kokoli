@@ -1,0 +1,74 @@
+import telebot
+
+import requests
+
+import os
+
+
+
+# Telegram bot tokenını girin
+
+bot = telebot.TeleBot('telegram-bot-token')
+
+
+
+# Kullanıcıların URL'lerini indirmesi için kullandığınız klasörü belirtin
+
+DOWNLOAD_DIR = 'downloaded_files/'
+
+
+
+@bot.message_handler(commands=['start'])
+
+def send_welcome(message):
+
+    """
+
+    Yeni bir kullanıcı botu kullanmaya başladığında karşılamak için bir mesaj gönderir
+
+    """
+
+    bot.reply_to(message, "Merhaba! URL Upload botuna hoş geldiniz. Lütfen bir URL gönderin.")
+
+
+
+@bot.message_handler(func=lambda message: True)
+
+def download_url(message):
+
+    """
+
+    Kullanıcının gönderdiği URL'yi alır ve verilen adrese kaydeder
+
+    """
+
+    try:
+
+        url = message.text
+
+        response = requests.get(url)
+
+        if response.status_code == 200:
+
+            filename = url.split("/")[-1]
+
+            with open(os.path.join(DOWNLOAD_DIR, filename), 'wb') as f:
+
+                f.write(response.content)
+
+            bot.reply_to(message, "Dosya başarıyla yüklendi.")
+
+        else:
+
+            bot.reply_to(message, "Dosya indirme hatası oluştu. Lütfen daha sonra tekrar deneyin.")
+
+    except Exception as e:
+
+        bot.reply_to(message, "Dosya indirme hatası oluştu. Hata mesajı: {}".format(str(e)))
+
+
+
+# Botu çalıştırın
+
+bot.polling()
+
